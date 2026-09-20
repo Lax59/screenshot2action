@@ -74,7 +74,7 @@ DEFAULT_ACTIONS = [
   {
     "id": "ex-3",
     "category": "hackathon",
-    "title": "AWS Bharat Builds Hackathon 2026",
+    "title": "AWS Generative AI Hackathon 2026",
     "description": "Build innovative Generative AI & Serverless applications using Amazon Bedrock, DynamoDB, and AWS Lambda. Win prizes up to ₹5,00,000.",
     "date": "2026-09-26",
     "time": "10:00 AM",
@@ -82,12 +82,12 @@ DEFAULT_ACTIONS = [
     "status": "Upcoming",
     "confidence": 0.99,
     "needs_review": False,
-    "evidence": "AWS Bharat Builds Tour 2026 — Registration Deadline September 26, Cash Prize ₹5,00,000",
+    "evidence": "AWS Generative AI Hackathon — Registration Deadline September 26, Cash Prize ₹5,00,000",
     "company": "Amazon Web Services",
     "role": "Builder / Team Lead",
     "prize": "₹5,00,000 Cash Prize",
     "location": "Online / National Grand Finale",
-    "apply_url": "https://aws.amazon.com/events/bharat-builds",
+    "apply_url": "https://aws.amazon.com/events/hackathon",
     "application_status": "Applied",
     "actionable": True,
     "created_at": "2026-09-19T11:00:00Z"
@@ -242,7 +242,7 @@ def parse_image_text(text: str, filename: str) -> dict:
         category = "hackathon"
     elif is_internship:
         category = "internship"
-    elif is_payment and not is_education and not is_event and not is_hackathon:
+    elif is_payment and bool(re.search(r'\b(?:fee|fees|tuition|challan|invoice|bill|amount due|unpaid|payable|payment|fine|penalty|upi)\b', lower)):
         category = "payment"
     elif is_education:
         category = "education"
@@ -561,7 +561,7 @@ async def analyze(file: UploadFile = File(...)):
             elif "internship" in filename.lower():
                 extracted_text = "AWS Cloud Engineering Summer Internship 2027\nAmazon Web Services is hiring Cloud Engineering Interns.\nStipend: ₹1,10,000 / month\nLocation: Bangalore / Hyderabad\nApply before September 28, 2026\nApply at: https://amazon.jobs/university"
             elif "hackathon" in filename.lower():
-                extracted_text = "AWS Bharat Builds Hackathon 2026\nBuild innovative Serverless & Generative AI applications on AWS.\nCash Prize: ₹5,00,000\nRegistration Deadline: September 26, 2026 10:00 AM\nApply at: https://aws.amazon.com/events/bharat-builds"
+                extracted_text = "AWS Generative AI Hackathon 2026\nBuild innovative Serverless & Generative AI applications on AWS.\nCash Prize: ₹5,00,000\nRegistration Deadline: September 26, 2026 10:00 AM\nApply at: https://aws.amazon.com/events/hackathon"
             elif "fee" in filename.lower():
                 extracted_text = "Semester Tuition Fee Payment Notice\nTuition fee due date: September 25, 2026\nAmount: ₹42,000\nPay online via UPI: college@sbi\nLate fee ₹500 applicable after due date."
             else:

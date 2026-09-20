@@ -106,7 +106,6 @@ const openUPI = (item) => {
 /* ── Notification Bell ── */
 function NotificationBell({ actions }) {
   const [open, setOpen] = useState(false)
-  const [perm, setPerm] = useState(() => 'Notification' in window ? Notification.permission : 'denied')
   const ref = useRef()
 
   useEffect(() => {
@@ -123,24 +122,18 @@ function NotificationBell({ actions }) {
     }).slice(0, 8)
   }, [actions])
 
-  const requestPerm = async () => {
-    if (!('Notification' in window)) return
-    setPerm(await Notification.requestPermission())
-  }
-
   return (
     <div className="notification-bell" ref={ref}>
-      <button className="bell-btn" onClick={() => setOpen(v => !v)} title="Reminders">
-        🔔 {urgent.length > 0 && <span className="notification-badge">{urgent.length}</span>}
+      <button className="bell-btn" onClick={() => setOpen(v => !v)} title="Upcoming reminders">
+        🔔{urgent.length > 0 && <span className="notification-badge">{urgent.length}</span>}
       </button>
       {open && (
         <div className="notifications-popup">
           <div className="notif-header">
             <b>🔔 Upcoming Reminders</b>
-            {perm !== 'granted' && <button className="enable-notif-btn" onClick={requestPerm}>Enable Alerts</button>}
           </div>
           {urgent.length === 0
-            ? <div className="notif-empty">You are all caught up ✓</div>
+            ? <div className="notif-empty">You're all caught up ✓</div>
             : <ul className="notif-list">
                 {urgent.map(a => {
                   const dl = daysLeft(a.date)
@@ -173,6 +166,7 @@ function AwsTimeline({ timeline }) {
       <div className="aws-timeline-header">
         <span className="aws-badge">⚡ AWS Pipeline</span>
         {timeline.total_ms && <span className="aws-total">{timeline.total_ms}ms total</span>}
+        {timeline.engine && <span className="aws-engine">{timeline.engine}</span>}
       </div>
       {steps.length > 0 && (
         <div className="aws-timeline-steps">
@@ -206,7 +200,7 @@ function ConfBar({ confidence = 0.85, needsReview }) {
   )
 }
 
-/* ── Internship Banner ── */
+/* ── Internship / Hackathon Banner on ActionCard ── */
 function InternshipBanner({ item, onStatusChange }) {
   if (item.category !== 'internship' && item.category !== 'hackathon') return null
   const status = item.application_status || 'Not Applied'
@@ -217,6 +211,7 @@ function InternshipBanner({ item, onStatusChange }) {
         {item.role     && <span className="internship-chip role">{item.role}</span>}
         {item.stipend  && <span className="internship-chip stipend">💰 {item.stipend}</span>}
         {item.prize    && <span className="internship-chip stipend">🏆 {item.prize}</span>}
+        {item.location && <span className="internship-chip">{item.location}</span>}
       </div>
       {item.apply_url && (
         <a className="card-action-btn apply-btn" href={item.apply_url} target="_blank" rel="noopener noreferrer">
@@ -224,7 +219,7 @@ function InternshipBanner({ item, onStatusChange }) {
         </a>
       )}
       <div className="application-pipeline">
-        <div className="pipeline-label">Track Application</div>
+        <div className="pipeline-label">Application Status</div>
         <div className="pipeline-steps">
           {APP_STATUSES.map(s => (
             <button key={s}
@@ -245,19 +240,20 @@ function ActionCard({ item, expanded, onToggleStatus, onDelete, onAppStatusChang
   const isCompleted  = item.status === 'Completed'
   const dl           = daysLeft(item.date)
   const label        = dlLabel(dl)
+  const meta         = getCategoryMeta(item.category)
 
   return (
     <article className={`action-card ${expanded ? 'expanded' : ''} ${isCompleted ? 'is-completed' : ''} ${isInternship ? 'internship-card' : ''}`}>
       <div className="card-head">
-        <span className={`category-icon ${item.accent || 'violet'}`}>{item.icon}</span>
+        <span className={`category-icon ${item.accent || meta.accent}`}>{item.icon || meta.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="category">{item.category}</span>
+          <span className="category">{meta.label}</span>
           <h3>{cleanText(item.title)}</h3>
         </div>
         <span className={`priority ${item.priority || 'medium'}`}>{item.priority || 'medium'}</span>
       </div>
 
-      <p className="description">{cleanText(item.description)}</p>
+      {item.description && <p className="description">{cleanText(item.description)}</p>}
 
       <div className="date-block">
         <span>WHEN</span>
@@ -277,97 +273,22 @@ function ActionCard({ item, expanded, onToggleStatus, onDelete, onAppStatusChang
 
       <InternshipBanner item={item} onStatusChange={onAppStatusChange} />
 
-      {!expanded && (
-        <div className="card-btn-bar">
-          {item.date && <button className="card-action-btn" onClick={() => downloadICS(item)}>📅 .ICS</button>}
-          {item.date && <button className="card-action-btn" onClick={() => openGCal(item)}>Google Cal</button>}
-          {isPayment  && <button className="card-action-btn" onClick={() => openUPI(item)}>💳 Pay</button>}
-          {onToggleStatus && (
-            <button className="card-action-btn" onClick={onToggleStatus}>
-              {isCompleted ? '↩ Undo' : '✓ Done'}
-            </button>
-          )}
-          {onDelete && <button className="card-action-btn delete-btn" onClick={onDelete} title="Delete">✕</button>}
-        </div>
-      )}
-      {expanded && item.date && (
-        <div className="card-btn-bar" style={{ marginTop: 10 }}>
-          <button className="card-action-btn" onClick={() => downloadICS(item)}>📅 Download .ICS</button>
-          <button className="card-action-btn" onClick={() => openGCal(item)}>Open Google Calendar</button>
-          {isPayment && <button className="card-action-btn" onClick={() => openUPI(item)}>💳 Pay via UPI</button>}
-        </div>
-      )}
+      <div className="card-btn-bar">
+        {item.date && <button className="card-action-btn" onClick={() => downloadICS(item)}>📅 .ICS</button>}
+        {item.date && <button className="card-action-btn" onClick={() => openGCal(item)}>Google Cal</button>}
+        {isPayment  && <button className="card-action-btn" onClick={() => openUPI(item)}>💳 Pay</button>}
+        {onToggleStatus && (
+          <button className="card-action-btn" onClick={onToggleStatus}>
+            {isCompleted ? '↩ Undo' : '✓ Done'}
+          </button>
+        )}
+        {onDelete && <button className="card-action-btn delete-btn" onClick={onDelete} title="Delete">✕ Remove</button>}
+      </div>
     </article>
   )
 }
 
-/* ── Edit Before Save Form ── */
-function EditForm({ data, onChange }) {
-  return (
-    <div className="edit-form">
-      <div className="edit-form-header">✏ Edit before saving</div>
-      <div className="edit-fields">
-        <div className="edit-field">
-          <label>Title</label>
-          <input value={data.title || ''} onChange={e => onChange({ ...data, title: e.target.value })} />
-        </div>
-        <div className="edit-field">
-          <label>Description</label>
-          <textarea value={data.description || ''} onChange={e => onChange({ ...data, description: e.target.value })} rows={2} />
-        </div>
-        <div className="edit-row">
-          <div className="edit-field">
-            <label>Date</label>
-            <input type="date" value={data.date || ''} onChange={e => onChange({ ...data, date: e.target.value })} />
-          </div>
-          <div className="edit-field">
-            <label>Category</label>
-            <select value={data.category || 'other'} onChange={e => onChange({ ...data, category: e.target.value })}>
-              {['education','event','payment','internship','hackathon','appointment','other'].map(c => (
-                <option key={c} value={c}>{c[0].toUpperCase()+c.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-          <div className="edit-field">
-            <label>Priority</label>
-            <select value={data.priority || 'medium'} onChange={e => onChange({ ...data, priority: e.target.value })}>
-              {['high','medium','low'].map(p => <option key={p} value={p}>{p[0].toUpperCase()+p.slice(1)}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── What Can I Extract ── */
-function ExtractGuide({ open, onToggle }) {
-  return (
-    <div className="extract-guide-wrap">
-      <button className="textbtn extract-guide-toggle" onClick={onToggle}>
-        {open ? '▲' : '▼'} What can Screenshot2Action detect?
-      </button>
-      {open && (
-        <div className="extract-guide-grid">
-          {[
-            { icon: '◈', title: 'Education',   desc: 'Assignments, exams, circulars, timetables' },
-            { icon: '💼', title: 'Internships', desc: 'Role, company, stipend, apply links & deadlines' },
-            { icon: '🚀', title: 'Hackathons',  desc: 'Registrations, prizes, team size, themes' },
-            { icon: '₹',  title: 'Payments',    desc: 'Fees, UPI IDs, amounts, due dates' },
-          ].map(c => (
-            <div key={c.title} className="extract-guide-card">
-              <span className="guide-icon">{c.icon}</span>
-              <b>{c.title}</b>
-              <p>{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ═══ Opportunities Tracker Page ═══ */
+/* ── Opportunity Card (Kanban View) ── */
 const OPP_STATUS_COLORS = {
   'Not Applied':   { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' },
   'Applied':       { bg: '#e0f2fe', text: '#0369a1', border: '#38bdf8' },
@@ -441,64 +362,259 @@ function OpportunityCard({ item, onStatusChange, onDelete }) {
   )
 }
 
-function OpportunitiesPage({ actions, onStatusChange, onDelete, onAddOpportunity }) {
-  const [oppFilter, setOppFilter] = useState('All')
-  const [oppSort, setOppSort]     = useState('Soonest')
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [manualData, setManualData] = useState({
-    title: '',
-    category: 'internship',
-    company: '',
-    role: '',
-    stipend: '',
-    prize: '',
-    date: '',
-    apply_url: '',
-    description: '',
-    application_status: 'Not Applied'
-  })
+/* ── Universal Manual Add Modal / Form ── */
+const DEFAULT_FORM_DATA = {
+  title: '',
+  category: 'internship',
+  company: '',
+  role: '',
+  stipend: '',
+  prize: '',
+  date: '',
+  apply_url: '',
+  description: '',
+  location: '',
+  amount: '',
+  upi_id: '',
+  priority: 'high',
+  application_status: 'Not Applied'
+}
 
-  const handleManualSubmit = (e) => {
-    e.preventDefault()
-    if (!manualData.title.trim()) {
-      alert('Please enter a title')
-      return
+function ManualAddModal({ isOpen, onClose, onSave, initialCategory = 'internship' }) {
+  const [data, setData] = useState(() => ({ ...DEFAULT_FORM_DATA, category: initialCategory }))
+
+  useEffect(() => {
+    if (isOpen) {
+      setData({ ...DEFAULT_FORM_DATA, category: initialCategory })
     }
-    const newOpp = {
+  }, [isOpen, initialCategory])
+
+  if (!isOpen) return null
+
+  const setField = (k, v) => setData(d => ({ ...d, [k]: v }))
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!data.title.trim()) return
+    const meta = getCategoryMeta(data.category)
+    const newItem = {
       id: String(Date.now()),
-      ...manualData,
-      priority: 'high',
+      ...data,
+      icon: meta.icon,
+      accent: meta.accent,
       status: 'Upcoming',
       confidence: 1.0,
       needs_review: false,
       actionable: true,
-      evidence: `Manually added: ${manualData.title} by user`
+      evidence: `Manually added by user`
     }
-    onAddOpportunity(newOpp)
-    setShowAddForm(false)
-    setManualData({
-      title: '',
-      category: 'internship',
-      company: '',
-      role: '',
-      stipend: '',
-      prize: '',
-      date: '',
-      apply_url: '',
-      description: '',
-      application_status: 'Not Applied'
-    })
+    onSave(newItem)
+    onClose()
   }
 
+  const isOpp = data.category === 'internship' || data.category === 'hackathon'
+  const isPay = data.category === 'payment'
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h3>Add New Item</h3>
+            <p>Track deadlines, internships, hackathons, or bills</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="manual-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label>Category *</label>
+              <select value={data.category} onChange={e => setField('category', e.target.value)}>
+                <option value="internship">💼 Internship</option>
+                <option value="hackathon">🚀 Hackathon</option>
+                <option value="education">◈ Education / Assignment</option>
+                <option value="payment">₹ Payment / Fee</option>
+                <option value="event">✦ Event</option>
+                <option value="appointment">📅 Appointment</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Deadline Date *</label>
+              <input type="date" value={data.date} onChange={e => setField('date', e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label>Priority</label>
+              <select value={data.priority} onChange={e => setField('priority', e.target.value)}>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Title / Program Name *</label>
+            <input
+              placeholder={isOpp ? "e.g. AWS Cloud Engineering Internship 2027" : "e.g. OS Lab Assignment 4"}
+              value={data.title}
+              onChange={e => setField('title', e.target.value)}
+              required
+            />
+          </div>
+
+          {isOpp && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Company / Organizer</label>
+                  <input placeholder="e.g. Amazon AWS" value={data.company} onChange={e => setField('company', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Role / Track</label>
+                  <input placeholder="e.g. Cloud Builder Intern" value={data.role} onChange={e => setField('role', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>{data.category === 'hackathon' ? 'Prize Pool' : 'Stipend'}</label>
+                  <input
+                    placeholder={data.category === 'hackathon' ? "e.g. ₹5,00,000" : "e.g. ₹1,10,000 / month"}
+                    value={data.category === 'hackathon' ? data.prize : data.stipend}
+                    onChange={e => data.category === 'hackathon' ? setField('prize', e.target.value) : setField('stipend', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label>Application URL</label>
+                  <input type="url" placeholder="https://..." value={data.apply_url} onChange={e => setField('apply_url', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Application Stage</label>
+                  <select value={data.application_status} onChange={e => setField('application_status', e.target.value)}>
+                    {APP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
+          {isPay && (
+            <div className="form-row">
+              <div className="form-group">
+                <label>Amount (₹)</label>
+                <input placeholder="e.g. 42000" value={data.amount} onChange={e => setField('amount', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>UPI ID</label>
+                <input placeholder="e.g. college@sbi" value={data.upi_id} onChange={e => setField('upi_id', e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label>Description / Notes</label>
+            <textarea
+              rows={2}
+              placeholder="Important notes, links, or submission guidelines..."
+              value={data.description}
+              onChange={e => setField('description', e.target.value)}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button type="submit" className="primary">Save Item →</button>
+            <button type="button" className="textbtn" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ── Edit Before Save Form ── */
+function EditForm({ data, onChange }) {
+  return (
+    <div className="edit-form">
+      <div className="edit-form-header">✏ Edit before saving</div>
+      <div className="edit-fields">
+        <div className="edit-field">
+          <label>Title</label>
+          <input value={data.title || ''} onChange={e => onChange({ ...data, title: e.target.value })} />
+        </div>
+        <div className="edit-field">
+          <label>Description</label>
+          <textarea value={data.description || ''} onChange={e => onChange({ ...data, description: e.target.value })} rows={2} />
+        </div>
+        <div className="edit-row">
+          <div className="edit-field">
+            <label>Date</label>
+            <input type="date" value={data.date || ''} onChange={e => onChange({ ...data, date: e.target.value })} />
+          </div>
+          <div className="edit-field">
+            <label>Category</label>
+            <select value={data.category || 'other'} onChange={e => onChange({ ...data, category: e.target.value })}>
+              {['education','event','payment','internship','hackathon','appointment','other'].map(c => (
+                <option key={c} value={c}>{c[0].toUpperCase()+c.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="edit-field">
+            <label>Priority</label>
+            <select value={data.priority || 'medium'} onChange={e => onChange({ ...data, priority: e.target.value })}>
+              {['high','medium','low'].map(p => <option key={p} value={p}>{p[0].toUpperCase()+p.slice(1)}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── What Can I Extract guide ── */
+function ExtractGuide({ open, onToggle }) {
+  return (
+    <div className="extract-guide-wrap">
+      <button className="textbtn extract-guide-toggle" onClick={onToggle}>
+        {open ? '▲' : '▼'} What can Screenshot2Action detect?
+      </button>
+      {open && (
+        <div className="extract-guide-grid">
+          {[
+            { icon: '◈', title: 'Education',   desc: 'Assignments, exams, circulars, timetables' },
+            { icon: '💼', title: 'Internships', desc: 'Role, company, stipend, apply links & deadlines' },
+            { icon: '🚀', title: 'Hackathons',  desc: 'Registrations, prizes, team size, themes' },
+            { icon: '₹',  title: 'Payments',    desc: 'Fees, UPI IDs, amounts, due dates' },
+          ].map(c => (
+            <div key={c.title} className="extract-guide-card">
+              <span className="guide-icon">{c.icon}</span>
+              <b>{c.title}</b>
+              <p>{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ═══ Opportunities Tracker Page ═══ */
+function OpportunitiesPage({ actions, onStatusChange, onDelete, onOpenAddModal }) {
+  const [oppFilter, setOppFilter] = useState('All')
+  const [oppSort, setOppSort]     = useState('Soonest')
+
+  const allOpps = useMemo(() =>
+    actions.filter(a => a.category === 'internship' || a.category === 'hackathon')
+  , [actions])
+
   const opps = useMemo(() => {
-    return [...actions]
-      .filter(a => a.category === 'internship' || a.category === 'hackathon')
+    return [...allOpps]
       .filter(a => {
-        if (oppFilter === 'All')        return true
-        if (oppFilter === 'Internships')return a.category === 'internship'
-        if (oppFilter === 'Hackathons') return a.category === 'hackathon'
-        if (oppFilter === 'Applied')    return ['Applied','Interviewing','Offer Received'].includes(a.application_status)
-        if (oppFilter === 'Pending')    return !a.application_status || a.application_status === 'Not Applied'
+        if (oppFilter === 'All')         return true
+        if (oppFilter === 'Internships') return a.category === 'internship'
+        if (oppFilter === 'Hackathons')  return a.category === 'hackathon'
+        if (oppFilter === 'Applied')     return ['Applied','Interviewing','Offer Received'].includes(a.application_status)
+        if (oppFilter === 'Pending')     return !a.application_status || a.application_status === 'Not Applied'
         return true
       })
       .sort((a, b) => {
@@ -510,192 +626,47 @@ function OpportunitiesPage({ actions, onStatusChange, onDelete, onAddOpportunity
         }
         return 0
       })
-  }, [actions, oppFilter, oppSort])
+  }, [allOpps, oppFilter, oppSort])
 
-  // Kanban stats
-  const stats = useMemo(() => {
-    const all = actions.filter(a => a.category === 'internship' || a.category === 'hackathon')
-    return {
-      total:       all.length,
-      notApplied:  all.filter(a => !a.application_status || a.application_status === 'Not Applied').length,
-      applied:     all.filter(a => a.application_status === 'Applied').length,
-      interviewing:all.filter(a => a.application_status === 'Interviewing').length,
-      offers:      all.filter(a => a.application_status === 'Offer Received').length,
-      rejected:    all.filter(a => a.application_status === 'Rejected').length,
-    }
-  }, [actions])
-
-  if (opps.length === 0 && actions.filter(a => a.category === 'internship' || a.category === 'hackathon').length === 0) {
-    return (
-      <section className="opp-page">
-        <div className="section-title row">
-          <div>
-            <span className="kicker">OPPORTUNITIES</span>
-            <h2>Track your opportunities.</h2>
-            <p>Screenshot internship listings and hackathon posters — or add them manually below.</p>
-          </div>
-          <div className="controls">
-            <button className="primary" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={() => setShowAddForm(v => !v)}>
-              {showAddForm ? '✕ Close Form' : '+ Add Opportunity'}
-            </button>
-          </div>
-        </div>
-
-        {showAddForm && (
-          <form className="edit-form manual-opp-form" onSubmit={handleManualSubmit} style={{ margin: '16px 0 24px', background: 'var(--card-bg)', border: '1px solid var(--violet)', boxShadow: '0 8px 24px rgba(109,91,208,0.12)' }}>
-            <div className="edit-form-header" style={{ color: 'var(--violet)' }}>✨ Add Custom Internship or Hackathon</div>
-            <div className="edit-fields">
-              <div className="edit-row">
-                <div className="edit-field">
-                  <label>Opportunity Type</label>
-                  <select value={manualData.category} onChange={e => setManualData({...manualData, category: e.target.value})}>
-                    <option value="internship">💼 Internship</option>
-                    <option value="hackathon">🚀 Hackathon</option>
-                  </select>
-                </div>
-                <div className="edit-field">
-                  <label>Initial Status</label>
-                  <select value={manualData.application_status} onChange={e => setManualData({...manualData, application_status: e.target.value})}>
-                    {APP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="edit-field">
-                  <label>Deadline Date</label>
-                  <input type="date" value={manualData.date} onChange={e => setManualData({...manualData, date: e.target.value})} required />
-                </div>
-              </div>
-              <div className="edit-field">
-                <label>Title / Program Name</label>
-                <input placeholder="e.g. AWS Cloud Engineering Summer 2027 Internship" value={manualData.title} onChange={e => setManualData({...manualData, title: e.target.value})} required />
-              </div>
-              <div className="edit-row">
-                <div className="edit-field">
-                  <label>Company / Organizer</label>
-                  <input placeholder="e.g. Amazon AWS, Google, Microsoft" value={manualData.company} onChange={e => setManualData({...manualData, company: e.target.value})} />
-                </div>
-                <div className="edit-field">
-                  <label>Role / Track</label>
-                  <input placeholder="e.g. SDE Intern / Builder" value={manualData.role} onChange={e => setManualData({...manualData, role: e.target.value})} />
-                </div>
-                <div className="edit-field">
-                  <label>{manualData.category === 'hackathon' ? 'Prize Pool' : 'Stipend / Salary'}</label>
-                  <input placeholder={manualData.category === 'hackathon' ? 'e.g. ₹5,00,000' : 'e.g. ₹1,10,000 / month'} value={manualData.category === 'hackathon' ? manualData.prize : manualData.stipend} onChange={e => manualData.category === 'hackathon' ? setManualData({...manualData, prize: e.target.value}) : setManualData({...manualData, stipend: e.target.value})} />
-                </div>
-              </div>
-              <div className="edit-field">
-                <label>Application or Portal URL</label>
-                <input type="url" placeholder="https://..." value={manualData.apply_url} onChange={e => setManualData({...manualData, apply_url: e.target.value})} />
-              </div>
-              <div className="edit-field">
-                <label>Description / Notes</label>
-                <textarea rows={2} placeholder="Requirements, rounds, referral notes..." value={manualData.description} onChange={e => setManualData({...manualData, description: e.target.value})} />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="submit" className="primary" style={{ padding: '8px 20px' }}>Save Opportunity →</button>
-                <button type="button" className="textbtn" onClick={() => setShowAddForm(false)}>Cancel</button>
-              </div>
-            </div>
-          </form>
-        )}
-
-        <div className="empty-opp">
-          <div className="orbit empty-orbit">💼</div>
-          <h3>No opportunities tracked yet</h3>
-          <p>Upload a screenshot of an internship listing or hackathon poster to start tracking — or click <strong>+ Add Opportunity</strong> above to add one manually.</p>
-        </div>
-      </section>
-    )
-  }
+  const stats = useMemo(() => ({
+    total:        allOpps.length,
+    notApplied:   allOpps.filter(a => !a.application_status || a.application_status === 'Not Applied').length,
+    applied:      allOpps.filter(a => a.application_status === 'Applied').length,
+    interviewing: allOpps.filter(a => a.application_status === 'Interviewing').length,
+    offers:       allOpps.filter(a => a.application_status === 'Offer Received').length,
+    rejected:     allOpps.filter(a => a.application_status === 'Rejected').length,
+  }), [allOpps])
 
   return (
     <section className="opp-page">
       <div className="section-title row">
         <div>
           <span className="kicker">OPPORTUNITIES & APPLICATIONS</span>
-          <h2>Track your opportunities.</h2>
-          <p>Never miss an application deadline, interview date, or hackathon submission.</p>
+          <h2>Opportunities & Hackathons</h2>
+          <p>Track internship application deadlines, interview rounds, and hackathon submissions.</p>
         </div>
         <div className="controls" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button className="primary" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={() => setShowAddForm(v => !v)}>
-            {showAddForm ? '✕ Close Form' : '+ Add Opportunity'}
+          <button
+            className="primary add-opp-btn-prominent"
+            onClick={() => onOpenAddModal('internship')}
+          >
+            + Add Opportunity
           </button>
           <select value={oppSort} onChange={e => setOppSort(e.target.value)}>
-            <option>Soonest</option>
-            <option>Newest</option>
-            <option>Status</option>
+            <option value="Soonest">Soonest</option>
+            <option value="Newest">Newest</option>
+            <option value="Status">Status</option>
           </select>
         </div>
       </div>
 
-      {showAddForm && (
-        <form className="edit-form manual-opp-form" onSubmit={handleManualSubmit} style={{ margin: '16px 0 24px', background: 'var(--card-bg)', border: '1px solid var(--violet)', boxShadow: '0 8px 24px rgba(109,91,208,0.12)' }}>
-          <div className="edit-form-header" style={{ color: 'var(--violet)' }}>✨ Add Custom Internship or Hackathon</div>
-          <div className="edit-fields">
-            <div className="edit-row">
-              <div className="edit-field">
-                <label>Opportunity Type</label>
-                <select value={manualData.category} onChange={e => setManualData({...manualData, category: e.target.value})}>
-                  <option value="internship">💼 Internship</option>
-                  <option value="hackathon">🚀 Hackathon</option>
-                </select>
-              </div>
-              <div className="edit-field">
-                <label>Initial Status</label>
-                <select value={manualData.application_status} onChange={e => setManualData({...manualData, application_status: e.target.value})}>
-                  {APP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div className="edit-field">
-                <label>Deadline Date</label>
-                <input type="date" value={manualData.date} onChange={e => setManualData({...manualData, date: e.target.value})} required />
-              </div>
-            </div>
-
-            <div className="edit-field">
-              <label>Title / Program Name</label>
-              <input placeholder="e.g. AWS Cloud Engineering Summer 2027 Internship" value={manualData.title} onChange={e => setManualData({...manualData, title: e.target.value})} required />
-            </div>
-
-            <div className="edit-row">
-              <div className="edit-field">
-                <label>Company / Organizer</label>
-                <input placeholder="e.g. Amazon AWS, Google, Microsoft" value={manualData.company} onChange={e => setManualData({...manualData, company: e.target.value})} />
-              </div>
-              <div className="edit-field">
-                <label>Role / Track</label>
-                <input placeholder="e.g. SDE Intern / Builder" value={manualData.role} onChange={e => setManualData({...manualData, role: e.target.value})} />
-              </div>
-              <div className="edit-field">
-                <label>{manualData.category === 'hackathon' ? 'Prize Pool' : 'Stipend / Salary'}</label>
-                <input placeholder={manualData.category === 'hackathon' ? 'e.g. ₹5,00,000' : 'e.g. ₹1,10,000 / month'} value={manualData.category === 'hackathon' ? manualData.prize : manualData.stipend} onChange={e => manualData.category === 'hackathon' ? setManualData({...manualData, prize: e.target.value}) : setManualData({...manualData, stipend: e.target.value})} />
-              </div>
-            </div>
-
-            <div className="edit-field">
-              <label>Application or Portal URL</label>
-              <input type="url" placeholder="https://..." value={manualData.apply_url} onChange={e => setManualData({...manualData, apply_url: e.target.value})} />
-            </div>
-
-            <div className="edit-field">
-              <label>Description / Notes</label>
-              <textarea rows={2} placeholder="Requirements, rounds, referral notes..." value={manualData.description} onChange={e => setManualData({...manualData, description: e.target.value})} />
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button type="submit" className="primary" style={{ padding: '8px 20px' }}>Save Opportunity →</button>
-              <button type="button" className="textbtn" onClick={() => setShowAddForm(false)}>Cancel</button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* Kanban stats */}
+      {/* Kanban pipeline stats */}
       <div className="opp-kanban">
         <div className="opp-stat-card"><span className="osk-num">{stats.total}</span><span className="osk-label">Total</span></div>
         <div className="opp-stat-card pending"><span className="osk-num">{stats.notApplied}</span><span className="osk-label">Not Applied</span></div>
         <div className="opp-stat-card applied"><span className="osk-num">{stats.applied}</span><span className="osk-label">Applied</span></div>
         <div className="opp-stat-card interviewing"><span className="osk-num">{stats.interviewing}</span><span className="osk-label">Interviewing</span></div>
-        <div className="opp-stat-card offer"><span className="osk-num">{stats.offers}</span><span className="osk-label">Offers</span></div>
+        <div className="opp-stat-card offer"><span className="osk-num">{stats.offers}</span><span className="osk-label">Offer</span></div>
         {stats.rejected > 0 && <div className="opp-stat-card rejected"><span className="osk-num">{stats.rejected}</span><span className="osk-label">Rejected</span></div>}
       </div>
 
@@ -705,22 +676,39 @@ function OpportunitiesPage({ actions, onStatusChange, onDelete, onAddOpportunity
         ))}
       </div>
 
-      <div className="opp-grid">
-        {opps.map(x => (
-          <OpportunityCard
-            key={x.id}
-            item={x}
-            onStatusChange={(s) => onStatusChange(x, s)}
-            onDelete={() => onDelete(x)}
-          />
-        ))}
-      </div>
+      {allOpps.length === 0 ? (
+        <div className="empty-opp">
+          <div className="orbit empty-orbit">💼</div>
+          <h3>No opportunities tracked yet</h3>
+          <p>Click <strong>+ Add Opportunity</strong> to track one manually, or upload a screenshot of an internship listing or hackathon poster.</p>
+          <button className="primary" style={{ marginTop: 14 }} onClick={() => onOpenAddModal('internship')}>
+            + Add Your First Opportunity
+          </button>
+        </div>
+      ) : opps.length === 0 ? (
+        <div className="empty-opp">
+          <div className="orbit empty-orbit">🔍</div>
+          <h3>No matches for "{oppFilter}"</h3>
+          <p>Try switching to "All" to view all tracked opportunities.</p>
+        </div>
+      ) : (
+        <div className="opp-grid">
+          {opps.map(x => (
+            <OpportunityCard
+              key={x.id}
+              item={x}
+              onStatusChange={(s) => onStatusChange(x, s)}
+              onDelete={() => onDelete(x)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
 
 /* ═══ Main App ═══ */
-const ALL_FILTERS = ['All', 'Education', 'Internships', 'Events', 'Payments']
+const ALL_FILTERS = ['All', 'Education', 'Internships', 'Hackathons', 'Payments', 'Events']
 
 function App() {
   const [actions, setActions]             = useState([])
@@ -734,13 +722,15 @@ function App() {
   const [editData, setEditData]           = useState({})
   const [filter, setFilter]               = useState('All')
   const [sort, setSort]                   = useState('Soonest')
-  const [page, setPage]                   = useState('home')   // 'home' | 'actions' | 'opportunities' | 'history'
-  const [aiMode, setAiMode]               = useState('')       // '' | 'bedrock'
+  const [page, setPage]                   = useState('home')
+  const [aiMode, setAiMode]               = useState('')
   const [storageInfo, setStorageInfo]     = useState('')
-  const [theme, setTheme]       = useState(() => localStorage.getItem('s2a_theme') || 'light')
+  const [theme, setTheme]                 = useState(() => localStorage.getItem('s2a_theme') || 'light')
   const [accent, setAccent]               = useState(() => localStorage.getItem('s2a_accent') || 'violet')
   const [guideOpen, setGuideOpen]         = useState(false)
   const [demoIdx, setDemoIdx]             = useState(0)
+  const [modalOpen, setModalOpen]         = useState(false)
+  const [modalCategory, setModalCategory] = useState('internship')
   const input = useRef()
 
   /* theme */
@@ -756,7 +746,7 @@ function App() {
   /* boot: health + load actions */
   useEffect(() => {
     fetch(`${API_URL}/api/health`).then(r=>r.json()).then(d => {
-      setAiMode(d.mode === 'aws-bedrock' ? 'bedrock' : '')
+      setAiMode(d.mode || '')
       if (d.storage) setStorageInfo(d.storage)
     }).catch(() => {})
 
@@ -788,8 +778,7 @@ function App() {
     if (!f) return
     setUploadError(null)
     if (!['image/png','image/jpeg','image/jpg','image/webp'].includes(f.type)) {
-      setUploadError('Please upload a PNG or JPG image.')
-      return
+      setUploadError('Please upload a PNG or JPG image.'); return
     }
     if (f.size > 8*1024*1024) { setUploadError('File too large. Max 8 MB.'); return }
     setFile(f); setResult(null); setEditMode(false)
@@ -823,7 +812,7 @@ function App() {
     } finally { setBusy(false) }
   }
 
-  /* save */
+  /* save to actions */
   const addAction = async () => {
     if (!result?.actionable) return
     const base = editMode ? { ...result, ...editData, ...getCategoryMeta(editData.category) } : result
@@ -835,12 +824,27 @@ function App() {
     const savedCategory = item.category
     setResult(null); setEditMode(false); removeFile()
     if (savedCategory === 'internship' || savedCategory === 'hackathon') {
-      setPage('opportunities')
-      setTimeout(() => document.getElementById('page-content')?.scrollIntoView({ behavior:'smooth' }), 100)
+      navTo('opportunities')
     } else {
-      setPage('actions')
-      setTimeout(() => document.getElementById('actions-section')?.scrollIntoView({ behavior:'smooth' }), 100)
+      document.getElementById('actions-section')?.scrollIntoView({ behavior: 'smooth' })
     }
+  }
+
+  /* handle manual add */
+  const handleManualAdd = async (newItem) => {
+    setActions(a => [newItem, ...a])
+    try {
+      await fetch(`${API_URL}/api/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      })
+    } catch {}
+  }
+
+  const openAddModal = (cat = 'internship') => {
+    setModalCategory(cat)
+    setModalOpen(true)
   }
 
   /* status toggle */
@@ -856,22 +860,24 @@ function App() {
     try { await fetch(`${API_URL}/api/actions/${item.id}`, { method:'DELETE' }) } catch {}
   }
 
-  /* app status */
+  /* app status for opportunities */
   const updateAppStatus = async (item, s) => {
     setActions(l => l.map(a => a.id===item.id ? {...a, application_status:s} : a))
     try { await fetch(`${API_URL}/api/actions/${item.id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({application_status:s}) }) } catch {}
   }
 
-  /* filtered list */
+  /* filtered actions list */
   const shown = useMemo(() => {
     return [...actions]
       .filter(a => {
-        if (page === 'history')  return a.status === 'Completed'
-        if (filter === 'All')    return a.status !== 'Completed'
-        if (filter === 'Internships') return a.category === 'internship' || a.category === 'hackathon'
-        if (filter === 'Events')      return a.category === 'event'
-        if (filter === 'Payments')    return a.category === 'payment'
-        return a.category === 'education'
+        if (page === 'history') return a.status === 'Completed'
+        if (filter === 'All')   return a.status !== 'Completed'
+        if (filter === 'Education') return a.category === 'education'
+        if (filter === 'Internships') return a.category === 'internship'
+        if (filter === 'Hackathons') return a.category === 'hackathon'
+        if (filter === 'Events')   return a.category === 'event' || a.category === 'appointment'
+        if (filter === 'Payments') return a.category === 'payment'
+        return true
       })
       .sort((a,b) => {
         if (sort === 'Priority') return a.priority==='high' ? -1 : 1
@@ -882,8 +888,9 @@ function App() {
 
   /* demo */
   const loadDemo = () => {
-    const demos = ['Assignment Deadline','Hackathon Flyer','Internship Listing','Fee Notice']
-    const f = new File(['demo'], `demo-${demos[demoIdx % demos.length]}.png`, { type:'image/png' })
+    const demos = ['demo-assignment.png','demo-hackathon.png','demo-internship.png','demo-fee.png']
+    const idx = demoIdx % demos.length
+    const f = new File(['demo'], demos[idx], { type:'image/png' })
     setDemoIdx(p => p+1)
     setFile(f); setResult(null); setEditMode(false); setUploadError(null)
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
@@ -894,13 +901,15 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const isBedrockLive = aiMode === 'aws-cloud' || aiMode === 'aws-bedrock'
+
   /* ── Render ── */
   return (
     <main>
       <div className="ambient a" />
       <div className="ambient b" />
 
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav>
         <a className="brand" onClick={() => navTo('home')}>
           <span className="brand-mark">↗</span> Screenshot<span>2</span>Action
@@ -933,18 +942,19 @@ function App() {
             <span>{theme==='light' ? 'Night' : 'Day'}</span>
           </button>
           <NotificationBell actions={actions} />
-          <div className="mode aws-live" title={`AWS AI Engine | ${storageInfo || 'S3 + DynamoDB'}`}>
-            <i /> ⚡ {aiMode === 'bedrock' ? 'AWS Bedrock Live' : 'AWS Cloud AI'}
+          <div className={`mode ${isBedrockLive ? 'aws-live' : 'aws-offline'}`}
+               title={`AI Engine | ${storageInfo || 'Amazon S3 + DynamoDB'}`}>
+            <i /> ⚡ {isBedrockLive ? 'AWS Bedrock' : 'AWS Cloud AI'}
           </div>
         </div>
       </nav>
 
-      {/* ── HOME ── */}
+      {/* ── HOME PAGE ── */}
       {page === 'home' && <>
         <section className="hero">
-          <div className="eyebrow"><b>✦</b> MULTI-MODAL SERVERLESS INTELLIGENCE</div>
+          <div className="eyebrow"><b>✦</b> SERVERLESS AI INTELLIGENCE</div>
           <h1>Turn forgotten screenshots<br />into <em>actions.</em></h1>
-          <p>Upload any screenshot — assignment circular, internship listing, hackathon poster, fee notice. We extract the key details and track everything for you.</p>
+          <p>Upload any screenshot — assignment circular, internship listing, hackathon poster, fee notice. AI extracts the key details and tracks everything for you.</p>
           <div className="hero-actions">
             <button className="primary" onClick={() => document.getElementById('inbox')?.scrollIntoView({ behavior:'smooth' })}>
               Analyze a screenshot <span>→</span>
@@ -956,11 +966,12 @@ function App() {
           <ExtractGuide open={guideOpen} onToggle={() => setGuideOpen(v=>!v)} />
         </section>
 
+        {/* ── AWS Architecture ── */}
         <section id="how" className="architecture-section">
           <div className="section-title">
-            <span className="kicker">PRODUCTION AWS ARCHITECTURE</span>
-            <h2>How Screenshot2Action Works on AWS</h2>
-            <p>End-to-end serverless multi-modal architecture with Amazon Bedrock, S3, Lambda, and DynamoDB.</p>
+            <span className="kicker">AWS ARCHITECTURE</span>
+            <h2>How Screenshot2Action Works</h2>
+            <p>Amazon Bedrock (Nova Lite), Amazon S3, AWS Lambda, and Amazon DynamoDB working together.</p>
           </div>
 
           <div className="flow">
@@ -968,68 +979,83 @@ function App() {
               <b>01</b>
               <span className="flow-icon">▧</span>
               <h3>Amazon S3</h3>
-              <p>Screenshot storage with server-side AES-256 encryption</p>
+              <p>Screenshot storage with AES-256 encryption and 30-day lifecycle expiry</p>
             </div>
             <i>→</i>
             <div>
               <b>02</b>
               <span className="flow-icon sparkle">✦</span>
               <h3>Amazon Bedrock – Nova Lite</h3>
-              <p>Multi-modal foundation model extracts dates, deadlines & links</p>
+              <p>Multimodal vision model extracts dates, deadlines, links, and amounts</p>
             </div>
             <i>→</i>
             <div>
               <b>03</b>
               <span className="flow-icon check">⚡</span>
               <h3>AWS Lambda</h3>
-              <p>Serverless event-driven execution with Mangum ASGI</p>
+              <p>Serverless compute via Mangum ASGI — zero infrastructure to manage</p>
             </div>
             <i>→</i>
             <div>
               <b>04</b>
               <span className="flow-icon" style={{ background: '#fef3c7', color: '#b45309' }}>🗄️</span>
               <h3>Amazon DynamoDB</h3>
-              <p>Managed NoSQL persistence for actions and application status</p>
+              <p>Pay-per-request NoSQL — stores actions, pipeline state, and deadlines</p>
             </div>
           </div>
 
           <div className="arch-cards-grid">
             <div className="arch-card">
-              <span className="arch-tag s3">Storage Layer</span>
-              <h4>Amazon Simple Storage Service (S3)</h4>
-              <p>Screenshots are stored in dedicated S3 buckets with strict bucket policies and automated 30-day lifecycle expiry.</p>
+              <span className="arch-tag s3">Storage</span>
+              <h4>Amazon S3</h4>
+              <p>Private bucket with strict access policies, AES-256 SSE, and automated 30-day expiry for privacy.</p>
             </div>
             <div className="arch-card">
-              <span className="arch-tag bedrock">Intelligence Layer</span>
+              <span className="arch-tag bedrock">AI Vision</span>
               <h4>Amazon Bedrock – Nova Lite</h4>
-              <p>High-accuracy multimodal vision model (amazon.nova-lite-v1:0) parses notices, internship posters, and fee circulars directly into structured JSON.</p>
+              <p>Foundation model <code>amazon.nova-lite-v1:0</code> parses notices, internship posters, and fee circulars into structured JSON.</p>
             </div>
             <div className="arch-card">
-              <span className="arch-tag lambda">Compute Layer</span>
+              <span className="arch-tag lambda">Compute</span>
               <h4>AWS Lambda + API Gateway</h4>
-              <p>Zero-maintenance serverless compute scales on-demand with student uploads with pay-per-use execution.</p>
+              <p>Event-driven serverless compute on Graviton2 (arm64). Scales to zero when idle — pay only for actual usage.</p>
             </div>
             <div className="arch-card">
-              <span className="arch-tag dynamodb">Database Layer</span>
+              <span className="arch-tag dynamodb">Database</span>
               <h4>Amazon DynamoDB</h4>
-              <p>High-throughput NoSQL table powers deadline queries, application pipeline state transitions, and calendar exports.</p>
+              <p>PAY_PER_REQUEST billing with TTL, PITR backup, and Global Secondary Index for deadline and pipeline queries.</p>
             </div>
           </div>
         </section>
 
+        {/* ── Action Inbox ── */}
         <section id="inbox" className="inbox">
           <div className="section-title">
             <div>
               <span className="kicker">ACTION INBOX</span>
-              <h2>Your action inbox</h2>
-              <p>Upload a screenshot. We extract what matters.</p>
+              <h2>Drop a screenshot, get an action.</h2>
+              <p>Upload — AI extracts deadlines, amounts, links, and more.</p>
             </div>
             <div className="stats">
-              <div><strong>{stats.total}</strong><span>Total</span></div>
-              <div><strong>{stats.upcoming}</strong><span>Upcoming</span></div>
-              {stats.overdue > 0 && <div className="stat-danger"><strong>{stats.overdue}</strong><span>Overdue</span></div>}
-              {stats.internships > 0 && <div><strong>{stats.internships}</strong><span>Opportunities</span></div>}
-              <div><strong>{stats.completed}</strong><span>Done</span></div>
+              <div onClick={() => document.getElementById('actions-section')?.scrollIntoView({ behavior:'smooth' })} title="Scroll to actions">
+                <strong>{stats.total}</strong><span>Total</span>
+              </div>
+              <div onClick={() => document.getElementById('actions-section')?.scrollIntoView({ behavior:'smooth' })} title="Scroll to upcoming actions">
+                <strong>{stats.upcoming}</strong><span>Upcoming</span>
+              </div>
+              {stats.overdue > 0 && (
+                <div className="stat-danger" onClick={() => document.getElementById('actions-section')?.scrollIntoView({ behavior:'smooth' })} title="Scroll to overdue actions">
+                  <strong>{stats.overdue}</strong><span>Overdue</span>
+                </div>
+              )}
+              {stats.internships > 0 && (
+                <div onClick={() => navTo('opportunities')} title="Open Opportunities Kanban">
+                  <strong>{stats.internships}</strong><span>Opportunities</span>
+                </div>
+              )}
+              <div onClick={() => navTo('history')} title="View History">
+                <strong>{stats.completed}</strong><span>Done</span>
+              </div>
             </div>
           </div>
 
@@ -1045,7 +1071,7 @@ function App() {
                   <div className="upload-icon">↑</div>
                   <h3>Drop a screenshot here</h3>
                   <p>or <u>click to browse</u></p>
-                  <small>PNG · JPG · up to 8 MB</small>
+                  <small>PNG · JPG · WebP · up to 8 MB</small>
                   <input ref={input} type="file" accept="image/png,image/jpeg,image/jpg,image/webp"
                     onChange={e => pick(e.target.files[0])} />
                 </div>
@@ -1069,7 +1095,7 @@ function App() {
                   <button className="primary analyze" disabled={busy} onClick={analyze}>
                     {busy ? 'Analyzing…' : 'Analyze screenshot'} <span>→</span>
                   </button>
-                  {busy && <div className="loading-status"><span className="spinner" /> Extracting data…</div>}
+                  {busy && <div className="loading-status"><span className="spinner" /> Extracting with Amazon Bedrock…</div>}
                 </div>
               )}
 
@@ -1081,7 +1107,7 @@ function App() {
               )}
 
               <button className="demo" onClick={loadDemo}>
-                ✦ Try a demo screenshot <span>cycles through examples</span>
+                ✦ Try a demo screenshot <span>cycles through examples →</span>
               </button>
             </div>
 
@@ -1094,7 +1120,7 @@ function App() {
                       <div className="review-banner">⚠ Low confidence — please verify before saving.</div>
                     )}
                     <div className="result-label">
-                      <span>✦</span> DETECTED <small>review before saving</small>
+                      <span>✦</span> EXTRACTED <small>review before saving</small>
                     </div>
                     <ActionCard item={editMode ? {...result,...editData,...getCategoryMeta(editData.category)} : result} expanded />
                     {result.aws_timeline && <AwsTimeline timeline={result.aws_timeline} />}
@@ -1122,8 +1148,8 @@ function App() {
                   <h3>Your next action is waiting</h3>
                   <p>Upload a screenshot — assignment deadline, internship listing, hackathon poster, or fee notice.</p>
                   <div className="trust">
-                    <span>◉ Structured</span>
-                    <span>◉ Tracked</span>
+                    <span>◉ AI-Extracted</span>
+                    <span>◉ Deadline Tracked</span>
                     <span>◉ AWS Powered</span>
                   </div>
                 </div>
@@ -1135,39 +1161,48 @@ function App() {
 
       {/* ── OPPORTUNITIES PAGE ── */}
       {page === 'opportunities' && (
-        <div id="page-content">
+        <div id="page-content" style={{ marginTop: 100 }}>
           <OpportunitiesPage
             actions={actions}
             onStatusChange={updateAppStatus}
             onDelete={deleteAction}
-            onAddOpportunity={async (newOpp) => {
-              const item = { ...newOpp, ...getCategoryMeta(newOpp.category) }
-              setActions(a => [item, ...a])
-              try {
-                await fetch(`${API_URL}/api/actions`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(item)
-                })
-              } catch {}
-            }}
+            onOpenAddModal={openAddModal}
           />
         </div>
       )}
 
-      {/* ── MY ACTIONS / HISTORY ── */}
-      {(page === 'actions' || page === 'history') && (
-        <section id="actions-section" className="actions" style={{ marginTop: 100 }}>
+      {/* ── MY ACTIONS / HISTORY / HOME DASHBOARD ── */}
+      {(page === 'home' || page === 'actions' || page === 'history') && (
+        <section id="actions-section" className="actions" style={{ marginTop: page === 'home' ? 60 : 100 }}>
           <div className="section-title row">
             <div>
-              <span className="kicker">{page === 'history' ? 'COMPLETED HISTORY' : 'SAVED ACTIONS'}</span>
-              <h2>{page === 'history' ? 'Completed actions.' : 'Keep momentum.'}</h2>
+              <span className="kicker">
+                {page === 'history' ? 'COMPLETED HISTORY' : page === 'actions' ? 'SAVED ACTIONS' : 'ACTIVE ACTIONS & OPPORTUNITIES'}
+              </span>
+              <h2>
+                {page === 'history' ? 'Completed actions archive.' : page === 'actions' ? 'Keep momentum.' : 'Tracked from your screenshots'}
+              </h2>
             </div>
-            <div className="controls">
+            <div className="controls" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {page !== 'history' && (
+                <>
+                  <button className="primary add-opp-btn-prominent" onClick={() => openAddModal('internship')}>
+                    + Add Opportunity
+                  </button>
+                  <button className="primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => openAddModal('education')}>
+                    + Add Action
+                  </button>
+                  {page === 'home' && (
+                    <button className="textbtn kanban-link-btn" onClick={() => navTo('opportunities')}>
+                      💼 Full Kanban View →
+                    </button>
+                  )}
+                </>
+              )}
               <select value={sort} onChange={e => setSort(e.target.value)}>
-                <option>Soonest</option>
-                <option>Newest</option>
-                <option>Priority</option>
+                <option value="Soonest">Soonest</option>
+                <option value="Newest">Newest</option>
+                <option value="Priority">Priority</option>
               </select>
             </div>
           </div>
@@ -1186,12 +1221,19 @@ function App() {
             <div className="empty-actions">
               <div className="empty-dashboard">
                 <div className="orbit empty-orbit">▧</div>
-                <h3>{page === 'history' ? 'No completed actions yet.' : 'No actions yet.'}</h3>
-                <p>{page === 'history' ? 'Complete an action to see it here.' : 'Upload a screenshot to get started.'}</p>
+                <h3>{page === 'history' ? 'No completed actions yet.' : filter === 'All' ? 'No actions saved yet.' : `No ${filter.toLowerCase()} saved yet.`}</h3>
+                <p>{page === 'history' ? 'Mark an action as done to see it here.' : 'Upload a screenshot above or click "+ Add Opportunity" to get started.'}</p>
                 {page !== 'history' && (
-                  <button className="primary" onClick={() => navTo('home')}>
-                    Go to Inbox ↑
-                  </button>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: 14 }}>
+                    <button className="primary" onClick={() => openAddModal('internship')}>
+                      + Add Opportunity
+                    </button>
+                    {page !== 'home' && (
+                      <button className="textbtn" onClick={() => navTo('home')}>
+                        Go to Inbox ↑
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -1210,6 +1252,14 @@ function App() {
           )}
         </section>
       )}
+
+      {/* ── UNIVERSAL MANUAL ADD MODAL ── */}
+      <ManualAddModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleManualAdd}
+        initialCategory={modalCategory}
+      />
 
       <footer>
         <span className="brand" onClick={() => navTo('home')}>
