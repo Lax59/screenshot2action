@@ -13,9 +13,10 @@
 
 > [!IMPORTANT]
 > **Build It / Local Demo Submission Notice:**
-> - **Fully Working Demo:** The primary, fully functional demonstration runs locally via **`localhost`** (React frontend on port 5173 + FastAPI backend on port 8000).
+> - **Working Demo:** The current demo runs locally; the AWS serverless architecture is codified in SAM.
+> - **Localhost:** The working demo runs on `http://localhost:5173` (React frontend) and `http://127.0.0.1:8000` (FastAPI backend).
 > - **Netlify URL:** The Netlify deployment is a static frontend preview only and does not connect to a live backend.
-> - **AWS Cloud Status:** Cloud resources (Amazon Bedrock, AWS Lambda, Amazon S3, and Amazon DynamoDB) are **not currently deployed live**. They are fully specified, verified, and ready in our open-source **AWS SAM (`template.yaml`)** for deployment via `sam deploy`.
+> - **AWS Cloud Status:** Cloud resources are not currently deployed live on AWS; they are codified and verified in our open-source **AWS SAM (`template.yaml`)**.
 > - **Parser Execution:** The local demo uses a resilient local NLP-based extraction engine that mirrors the exact JSON schema defined for Amazon Bedrock Nova Lite.
 
 ---
@@ -194,7 +195,7 @@ EOF
 
 ### 3. Tracked Actions & Instant Integrations
 ![Tracked Actions from Screenshots](docs/screenshots/tracked_actions.png)
-*Action items extracted from screenshots with urgency indicators, one-click `.ICS` calendar export, Google Calendar sync, and instant `upi://pay` links.*
+*Action items extracted from screenshots with urgency indicators, one-click `.ICS` calendar export, open a pre-filled Google Calendar event, and instant `upi://pay` links.*
 
 ### 4. AWS Serverless Architecture
 ![AWS Architecture Flow](docs/screenshots/aws_architecture.png)

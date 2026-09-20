@@ -1223,6 +1223,8 @@ footer b { color: var(--violet); }
 /* ─── Confidence Bar ─────────────────────────────────────── */
 .confidence-bar-wrap { margin: 8px 0; }
 .conf-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.extracted-badge { background: #dcfce7; color: #15803d; border-radius: 4px; padding: 1px 6px; font-weight: 700; font-size: 11px; }
+[data-theme="dark"] .extracted-badge { background: #064e3b; color: #6ee7b7; }
 .review-badge { background: #fef3c7; color: #b45309; border-radius: 4px; padding: 1px 6px; font-weight: 700; font-size: 11px; }
 [data-theme="dark"] .review-badge { background: #451a03; color: #fde68a; }
 .confidence-bar { height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }

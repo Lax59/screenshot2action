@@ -183,19 +183,27 @@ function AwsTimeline({ timeline }) {
   )
 }
 
-/* ── Confidence Bar ── */
+/* ── Confidence / Status Bar ── */
 function ConfBar({ confidence = 0.85, needsReview }) {
-  const pct = Math.round((confidence || 0.85) * 100)
-  const clr = pct >= 85 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444'
+  const isReview = needsReview || (confidence && confidence < 0.6)
   return (
     <div className="confidence-bar-wrap">
       <div className="conf-label">
-        {needsReview
-          ? <span className="review-badge">⚠ Needs Review</span>
-          : <span style={{ color: clr, fontWeight: 700 }}>{pct}% confidence</span>
-        }
+        {isReview ? (
+          <span className="review-badge">⚠ Needs Review</span>
+        ) : (
+          <span className="extracted-badge">✓ Extracted</span>
+        )}
       </div>
-      <div className="confidence-bar"><div className="conf-fill" style={{ width: `${pct}%`, background: clr }} /></div>
+      <div className="confidence-bar">
+        <div
+          className="conf-fill"
+          style={{
+            width: '100%',
+            background: isReview ? '#f59e0b' : '#22c55e'
+          }}
+        />
+      </div>
     </div>
   )
 }
@@ -1119,7 +1127,7 @@ function App() {
                 result.actionable ? (
                   <>
                     {result.needs_review && (
-                      <div className="review-banner">⚠ Low confidence — please verify before saving.</div>
+                      <div className="review-banner">⚠ Needs Review — please verify details before saving.</div>
                     )}
                     <div className="result-label">
                       <span>✦</span> EXTRACTED <small>review before saving</small>
