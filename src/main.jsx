@@ -969,9 +969,11 @@ function App() {
 
         {/* ── AWS Architecture ── */}
         <section id="how" className="architecture-section">
-          <div className="section-title">
-            <span className="kicker">AWS ARCHITECTURE</span>
-            <h2>How Screenshot2Action Works</h2>
+          <div className="section-title arch-section-title">
+            <div>
+              <span className="kicker">AWS ARCHITECTURE</span>
+              <h2>How Screenshot2Action Works</h2>
+            </div>
           </div>
 
           <div className="flow">

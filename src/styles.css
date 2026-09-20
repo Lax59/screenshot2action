@@ -1549,7 +1549,17 @@ footer b { color: var(--violet); }
    Production AWS Architecture Section Styles
    ════════════════════════════════════════════════════════════════ */
 .architecture-section {
-  margin-top: 60px;
+  margin-top: 70px;
+}
+
+.arch-section-title {
+  margin-bottom: 24px;
+}
+
+.arch-section-title h2 {
+  margin-top: 8px;
+  margin-bottom: 0;
+  line-height: 1.25;
 }
 
 .arch-cards-grid {

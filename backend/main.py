@@ -238,20 +238,24 @@ def parse_image_text(text: str, filename: str) -> dict:
         re.search(r'\b(?:appointment|interview|doctor|clinic|dentist|consultation|scheduled call|zoom meeting)\b', lower)
     )
 
+    # Differentiate fee/tuition notices from general academic assignments
+    is_pure_payment = is_payment and bool(re.search(r'\b(?:fee|fees|tuition|challan|invoice|bill|amount due|unpaid|payable|payment|upi)\b', lower))
+    has_assignment = bool(re.search(r'\b(?:assignment|homework|lab report|project work|submission deadline)\b', lower))
+
     if is_hackathon:
         category = "hackathon"
     elif is_internship:
         category = "internship"
-    elif is_payment and bool(re.search(r'\b(?:fee|fees|tuition|challan|invoice|bill|amount due|unpaid|payable|payment|fine|penalty|upi)\b', lower)):
+    elif is_pure_payment and not has_assignment:
         category = "payment"
     elif is_education:
         category = "education"
+    elif is_payment:
+        category = "payment"
     elif is_event:
         category = "event"
     elif is_appointment:
         category = "appointment"
-    elif is_payment:
-        category = "payment"
     else:
         category = "other"
 
