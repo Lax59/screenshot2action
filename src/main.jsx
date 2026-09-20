@@ -877,7 +877,7 @@ function App() {
       {/* ── HOME ── */}
       {page === 'home' && <>
         <section className="hero">
-          <div className="eyebrow"><b>✦</b> AWS HACKATHON 2026 · BHARAT BUILDS TOUR</div>
+          <div className="eyebrow"><b>✦</b> MULTI-MODAL SERVERLESS INTELLIGENCE</div>
           <h1>Turn forgotten screenshots<br />into <em>actions.</em></h1>
           <p>Upload any screenshot — assignment circular, internship listing, hackathon poster, fee notice. We extract the key details and track everything for you.</p>
           <div className="hero-actions">
@@ -895,7 +895,7 @@ function App() {
           <div className="section-title">
             <span className="kicker">PRODUCTION AWS ARCHITECTURE</span>
             <h2>How Screenshot2Action Works on AWS</h2>
-            <p>End-to-end serverless multi-modal pipeline built for the AWS Bharat Builds Tour 2026.</p>
+            <p>End-to-end serverless multi-modal architecture with Amazon Bedrock, S3, Lambda, and DynamoDB.</p>
           </div>
 
           <div className="flow">
@@ -1150,7 +1150,7 @@ function App() {
         <span className="brand" onClick={() => navTo('home')}>
           <span className="brand-mark">↗</span> Screenshot2Action
         </span>
-        <p>Built with <b>Amazon Bedrock</b> · <b>DynamoDB</b> · <b>Amazon S3</b> · AWS Bharat Builds Tour 2026</p>
+        <p>Powered by <b>Amazon Bedrock</b> · <b>Amazon DynamoDB</b> · <b>Amazon S3</b> · <b>AWS Lambda</b></p>
       </footer>
     </main>
   )
