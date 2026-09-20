@@ -184,17 +184,21 @@ EOF
 
 ## 📸 Application Interface & Feature Showcase
 
-### 1. Dashboard & Intelligent Screenshot Inbox
-![Screenshot2Action Dashboard](docs/screenshots/dashboard.png)
+### 1. Hero & Screenshot Analysis Inbox
+![Screenshot2Action Hero Dashboard](docs/screenshots/hero_dashboard.png)
 *Upload circulars, assignment notices, or hackathon flyers. The system extracts dates, urgency levels, and actions with zero manual data entry.*
 
-### 2. Opportunities & Hackathon Kanban Pipeline
-![Opportunities Kanban Board](docs/screenshots/opportunities.png)
+### 2. Opportunities & Hackathon Pipeline
+![Opportunities Tracker](docs/screenshots/opportunities_pipeline.png)
 *Track internship applications and hackathon registrations across a 5-stage pipeline: Not Applied, Applied, Interviewing, Offer, and Rejected.*
 
-### 3. Action Items & Instant Integrations
-![Action Items & Integrations](docs/screenshots/actions.png)
-*One-click `.ICS` calendar export, Google Calendar sync, and instant `upi://pay` links for tuition fee notices.*
+### 3. Tracked Actions & Instant Integrations
+![Tracked Actions from Screenshots](docs/screenshots/tracked_actions.png)
+*Action items extracted from screenshots with urgency indicators, one-click `.ICS` calendar export, Google Calendar sync, and instant `upi://pay` links.*
+
+### 4. AWS Serverless Architecture
+![AWS Architecture Flow](docs/screenshots/aws_architecture.png)
+*Visual architectural flow showing Amazon S3, Amazon Bedrock (Nova Lite), AWS Lambda, and Amazon DynamoDB working as the target serverless design.*
 
 ---
 
