@@ -15,7 +15,7 @@
 > **Build It / Local Demo Submission Notice:**
 > - **Working Demo:** The current demo runs locally; the AWS serverless architecture is codified in SAM.
 > - **Localhost:** The working demo runs on `http://localhost:5173` (React frontend) and `http://127.0.0.1:8000` (FastAPI backend).
-> - **Netlify URL:** The Netlify deployment is a static frontend preview only and does not connect to a live backend.
+> - **Live Frontend Demo:** [Screenshot2Action on Netlify](https://screenshot2action.netlify.app) (The deployed site is the frontend demo; the current working backend/demo flow is demonstrated locally).
 > - **AWS Cloud Status:** Cloud resources are not currently deployed live on AWS; they are codified and verified in our open-source **AWS SAM (`template.yaml`)**.
 > - **Parser Execution:** The local demo uses a resilient local NLP-based extraction engine that mirrors the exact JSON schema defined for Amazon Bedrock Nova Lite.
 
@@ -40,7 +40,7 @@ These screenshots get buried in photo galleries. Critical submission deadlines p
 1. **Academic Deadlines** — Title, submission cutoff date, course, priority, and extracted evidence quote.
 2. **Opportunities & Hackathons** — Program name, company, role track, stipend/prize pool, application portal URL, and deadline.
 3. **Payments & Fees** — Due amount in ₹ INR, target UPI ID (`upi://pay`), and warning flags.
-4. **Calendar & Pipeline Integration** — One-click `.ICS` file download (Apple Calendar / Outlook), Google Calendar deep link, and an interactive Kanban application status pipeline.
+4. **Calendar & Pipeline Integration** — One-click `.ICS` file download (Apple Calendar / Outlook), pre-filled Google Calendar event, and an interactive Kanban application status pipeline.
 
 ---
 
@@ -84,7 +84,7 @@ User Browser (React + Vite)
 - **✦ Intelligent Extraction**: Upload circulars or click demo samples to extract titles, dates, currency amounts, and application URLs.
 - **💼 Opportunities Tracker (Kanban Pipeline)**: Track internship and hackathon applications through 5 stages: *Not Applied*, *Applied*, *Interviewing*, *Offer Received*, and *Rejected*.
 - **✨ Universal Manual Entry Modal**: Add opportunities or academic tasks manually with category-specific fields without needing an image.
-- **📅 Calendar Deep-Links & .ICS**: Download standardized `.ics` calendar events with built-in 30-minute reminder alarms or pre-fill Google Calendar.
+- **📅 Calendar Deep-Links & .ICS**: Download standardized `.ics` calendar events with built-in 30-minute reminder alarms or open a pre-filled Google Calendar event.
 - **💳 Instant UPI Pay Integration**: Parses UPI IDs and bill amounts to launch Google Pay, PhonePe, or Paytm via `upi://pay` links.
 - **🌓 Theme & Color Accents**: Fully responsive Day/Night modes and 5 accent palettes (Violet, Cyan, Emerald, Amber, Rose).
 - **🔔 Notification Bell**: In-app deadline alerts highlight upcoming or overdue items.

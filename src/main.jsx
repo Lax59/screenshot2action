@@ -183,27 +183,16 @@ function AwsTimeline({ timeline }) {
   )
 }
 
-/* ── Confidence / Status Bar ── */
+/* ── Status Badge ── */
 function ConfBar({ confidence = 0.85, needsReview }) {
   const isReview = needsReview || (confidence && confidence < 0.6)
   return (
     <div className="confidence-bar-wrap">
-      <div className="conf-label">
-        {isReview ? (
-          <span className="review-badge">⚠ Needs Review</span>
-        ) : (
-          <span className="extracted-badge">✓ Extracted</span>
-        )}
-      </div>
-      <div className="confidence-bar">
-        <div
-          className="conf-fill"
-          style={{
-            width: '100%',
-            background: isReview ? '#f59e0b' : '#22c55e'
-          }}
-        />
-      </div>
+      {isReview ? (
+        <span className="review-badge">⚠️ Needs Review</span>
+      ) : (
+        <span className="extracted-badge">✓ Extracted</span>
+      )}
     </div>
   )
 }
