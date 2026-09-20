@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.env
+*.env.local
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# AWS SAM build artefacts
+.aws-sam/
+samconfig.toml
+
+# macOS
+.DS_Store
+
+# Local dev and binaries
+backend/ocr
+backend/uploads/
+*.DS_Store

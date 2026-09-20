@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Screenshot2Action — Amazon Bedrock vision + serverless API (Bharat Builds Tour 2026)
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: A Bedrock vision-capable model ID enabled in your region (e.g. amazon.nova-lite-v1:0)
+  CorsOrigin:
+    Type: String
+    Default: http://localhost:5173
+    Description: Frontend origin allowed for CORS (update after Amplify deploy)
+  StageName:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 30
+    MemorySize: 1024
+    Architectures: [arm64]   # Graviton2 — ~20% cheaper, faster cold starts
+    Environment:
+      Variables:
+        MOCK_AI: 'false'
+        S3_BUCKET: !Ref ScreenshotBucket
+        DYNAMODB_TABLE: !Ref ActionsTable
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        AWS_REGION: !Ref AWS::Region
+        CORS_ORIGINS: !Ref CorsOrigin
+    Layers:
+      - !Ref DepsLayer
+
+Resources:
+
+  # ─── Lambda Layer (Python deps) ─────────────────────────────────────────────
+  DepsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: screenshot2action-deps
+      ContentUri: backend/
+      CompatibleRuntimes: [python3.13]
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.13
+      BuildArchitecture: arm64
+
+  # ─── HTTP API ────────────────────────────────────────────────────────────────
+  ScreenshotApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref CorsOrigin
+          - http://localhost:5173
+          - http://127.0.0.1:5173
+        AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
+        AllowHeaders: [content-type, authorization]
+        MaxAge: 300
+
+  # ─── Lambda Function ─────────────────────────────────────────────────────────
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub screenshot2action-api-${StageName}
+      CodeUri: backend/
+      Handler: main.handler
+      Description: Screenshot2Action FastAPI backend via Mangum
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref ScreenshotBucket
+        - S3ReadPolicy:
+            BucketName: !Ref ScreenshotBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ActionsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource:
+                - !Sub arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/*
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ScreenshotApi
+            Path: /{proxy+}
+            Method: ANY
+
+  # ─── Private S3 Bucket (screenshot storage) ──────────────────────────────────
+  ScreenshotBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub screenshot2action-uploads-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireSourceScreenshots
+            Status: Enabled
+            ExpirationInDays: 30      # Auto-delete screenshots after 30 days (privacy)
+      VersioningConfiguration:
+        Status: Suspended
+
+  # ─── DynamoDB Table (actions) ─────────────────────────────────────────────────
+  ActionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub screenshot2action-actions-${StageName}
+      BillingMode: PAY_PER_REQUEST     # No provisioning cost, scales automatically
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true                  # Optionally expire old actions
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL — set as VITE_API_URL in Amplify
+    Value: !Sub https://${ScreenshotApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+
+  ScreenshotBucketName:
+    Description: Private S3 bucket for screenshot storage
+    Value: !Ref ScreenshotBucket
+
+  ActionsTableName:
+    Description: DynamoDB table for action storage
+    Value: !Ref ActionsTable
+
+  LambdaFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt ApiFunction.Arn
