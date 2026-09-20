@@ -528,15 +528,80 @@ function OpportunitiesPage({ actions, onStatusChange, onDelete, onAddOpportunity
   if (opps.length === 0 && actions.filter(a => a.category === 'internship' || a.category === 'hackathon').length === 0) {
     return (
       <section className="opp-page">
-        <div className="section-title">
-          <span className="kicker">OPPORTUNITIES</span>
-          <h2>Track your opportunities.</h2>
-          <p>Screenshot internship listings and hackathon posters — we will track your applications automatically.</p>
+        <div className="section-title row">
+          <div>
+            <span className="kicker">OPPORTUNITIES</span>
+            <h2>Track your opportunities.</h2>
+            <p>Screenshot internship listings and hackathon posters — or add them manually below.</p>
+          </div>
+          <div className="controls">
+            <button className="primary" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={() => setShowAddForm(v => !v)}>
+              {showAddForm ? '✕ Close Form' : '+ Add Opportunity'}
+            </button>
+          </div>
         </div>
+
+        {showAddForm && (
+          <form className="edit-form manual-opp-form" onSubmit={handleManualSubmit} style={{ margin: '16px 0 24px', background: 'var(--card-bg)', border: '1px solid var(--violet)', boxShadow: '0 8px 24px rgba(109,91,208,0.12)' }}>
+            <div className="edit-form-header" style={{ color: 'var(--violet)' }}>✨ Add Custom Internship or Hackathon</div>
+            <div className="edit-fields">
+              <div className="edit-row">
+                <div className="edit-field">
+                  <label>Opportunity Type</label>
+                  <select value={manualData.category} onChange={e => setManualData({...manualData, category: e.target.value})}>
+                    <option value="internship">💼 Internship</option>
+                    <option value="hackathon">🚀 Hackathon</option>
+                  </select>
+                </div>
+                <div className="edit-field">
+                  <label>Initial Status</label>
+                  <select value={manualData.application_status} onChange={e => setManualData({...manualData, application_status: e.target.value})}>
+                    {APP_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="edit-field">
+                  <label>Deadline Date</label>
+                  <input type="date" value={manualData.date} onChange={e => setManualData({...manualData, date: e.target.value})} required />
+                </div>
+              </div>
+              <div className="edit-field">
+                <label>Title / Program Name</label>
+                <input placeholder="e.g. AWS Cloud Engineering Summer 2027 Internship" value={manualData.title} onChange={e => setManualData({...manualData, title: e.target.value})} required />
+              </div>
+              <div className="edit-row">
+                <div className="edit-field">
+                  <label>Company / Organizer</label>
+                  <input placeholder="e.g. Amazon AWS, Google, Microsoft" value={manualData.company} onChange={e => setManualData({...manualData, company: e.target.value})} />
+                </div>
+                <div className="edit-field">
+                  <label>Role / Track</label>
+                  <input placeholder="e.g. SDE Intern / Builder" value={manualData.role} onChange={e => setManualData({...manualData, role: e.target.value})} />
+                </div>
+                <div className="edit-field">
+                  <label>{manualData.category === 'hackathon' ? 'Prize Pool' : 'Stipend / Salary'}</label>
+                  <input placeholder={manualData.category === 'hackathon' ? 'e.g. ₹5,00,000' : 'e.g. ₹1,10,000 / month'} value={manualData.category === 'hackathon' ? manualData.prize : manualData.stipend} onChange={e => manualData.category === 'hackathon' ? setManualData({...manualData, prize: e.target.value}) : setManualData({...manualData, stipend: e.target.value})} />
+                </div>
+              </div>
+              <div className="edit-field">
+                <label>Application or Portal URL</label>
+                <input type="url" placeholder="https://..." value={manualData.apply_url} onChange={e => setManualData({...manualData, apply_url: e.target.value})} />
+              </div>
+              <div className="edit-field">
+                <label>Description / Notes</label>
+                <textarea rows={2} placeholder="Requirements, rounds, referral notes..." value={manualData.description} onChange={e => setManualData({...manualData, description: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button type="submit" className="primary" style={{ padding: '8px 20px' }}>Save Opportunity →</button>
+                <button type="button" className="textbtn" onClick={() => setShowAddForm(false)}>Cancel</button>
+              </div>
+            </div>
+          </form>
+        )}
+
         <div className="empty-opp">
           <div className="orbit empty-orbit">💼</div>
           <h3>No opportunities tracked yet</h3>
-          <p>Upload a screenshot of an internship listing or hackathon poster to start tracking.</p>
+          <p>Upload a screenshot of an internship listing or hackathon poster to start tracking — or click <strong>+ Add Opportunity</strong> above to add one manually.</p>
         </div>
       </section>
     )

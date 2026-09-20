@@ -54,7 +54,8 @@
     "apply_url": "https://aws.amazon.com/events/bharat-builds",
     "application_status": "Applied",
     "actionable": true,
-    "created_at": "2026-09-19T11:00:00Z"
+    "created_at": "2026-09-19T11:00:00Z",
+    "updated_at": "2026-09-20T08:52:44.691159Z"
   },
   {
     "id": "ex-4",
