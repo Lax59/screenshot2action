@@ -905,8 +905,6 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const isBedrockLive = aiMode === 'aws-cloud' || aiMode === 'aws-bedrock'
-
   /* ── Render ── */
   return (
     <main>
