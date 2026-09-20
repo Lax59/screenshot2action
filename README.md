@@ -194,15 +194,19 @@ EOF
 
 ---
 
-## 🎬 3-Minute Hackathon Demo Script
+## 📸 Application Interface & Feature Showcase
 
-| Time | Screen | Talking Points |
-|---|---|---|
-| **0:00 - 0:35** | Home Page | Introduce Screenshot2Action: "Students capture dozens of screenshots for assignments, internship postings, and hackathons, but they get lost. Screenshot2Action turns them into structured actions automatically." Highlight the **AWS Architecture section** (S3, Bedrock Nova Lite, Lambda, DynamoDB). |
-| **0:35 - 1:20** | Action Inbox | Click **"Try a demo screenshot"** → pick **"Assignment Deadline"** → click **"Analyze screenshot"**. Show the instant extraction results, the **AWS Pipeline timeline widget** showing real response times, and click **"Save to My Actions"**. |
-| **1:20 - 2:05** | Opportunities Kanban | Switch to **💼 Opportunities**. Showcase the Kanban pipeline tracking applications from *Not Applied* to *Offer Received*. Click **"+ Add Opportunity"** to demonstrate manual entry of a custom hackathon or internship. Update an application status pill. |
-| **2:05 - 2:40** | Features & Integrations | Demonstrate **.ICS download** / **Google Calendar integration**. Click the **💳 Pay** button on the fee notice. Toggle between **Day and Night theme** and switch accent colors. Show deadline alerts in the **Notification Bell**. |
-| **2:40 - 3:00** | Conclusion | Summarize the serverless AWS stack: zero idle costs, private S3 storage with 30-day lifecycle cleanup, Amazon Bedrock foundation intelligence, and sub-second DynamoDB lookups. |
+### 1. Dashboard & Intelligent Screenshot Inbox
+![Screenshot2Action Dashboard](docs/screenshots/dashboard.png)
+*Upload circulars, assignment notices, or hackathon flyers. The system extracts dates, urgency levels, and actions with zero manual data entry.*
+
+### 2. Opportunities & Hackathon Kanban Pipeline
+![Opportunities Kanban Board](docs/screenshots/opportunities.png)
+*Track internship applications and hackathon registrations across a 5-stage pipeline: Not Applied, Applied, Interviewing, Offer, and Rejected.*
+
+### 3. Action Items & Instant Integrations
+![Action Items & Integrations](docs/screenshots/actions.png)
+*One-click `.ICS` calendar export, Google Calendar sync, and instant `upi://pay` links for tuition fee notices.*
 
 ---
 

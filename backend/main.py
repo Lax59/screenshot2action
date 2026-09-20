@@ -487,14 +487,11 @@ def _bedrock_extract(content: bytes, content_type: str) -> dict:
 # ─── API Endpoints ───────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
-    mode = "aws-cloud"
-    if os.getenv("MOCK_AI", "true").lower() != "true" and os.getenv("AWS_REGION"):
-        mode = "aws-bedrock"
     return {
         "status": "ok",
-        "mode": mode,
-        "engine": "Amazon Bedrock – Nova Lite" if mode == "aws-bedrock" else "Amazon Bedrock – Nova Lite",
-        "storage": "AWS S3 + DynamoDB" if (_use_dynamo() or _use_s3()) else "AWS S3 Cloud Store",
+        "mode": "local-prototype",
+        "engine": "Intelligent Parser (AWS Bedrock Architecture)",
+        "storage": "Local Data Store (AWS DynamoDB Schema)",
         "version": "2.0.0"
     }
 
@@ -538,20 +535,20 @@ async def analyze(file: UploadFile = File(...)):
             log.warning("Local file write failed: %s", e)
     s3_time_ms = int((time.time() - s3_start) * 1000)
 
-    # Step 2: AI Analysis via Amazon Bedrock – Nova Lite
+    # Step 2: AI Analysis via Amazon Bedrock (or local prototype parser)
     ai_start = time.time()
     mock_mode = os.getenv("MOCK_AI", "").lower() == "true"
-    ai_engine = f"Amazon Bedrock – Nova Lite ({os.getenv('BEDROCK_MODEL_ID', 'amazon.nova-lite-v1:0')})"
+    ai_engine = "Intelligent Local Parser (Target: Amazon Bedrock Nova Lite)"
     result = None
 
-    # Attempt real Amazon Bedrock extraction first
+    # Attempt real Amazon Bedrock extraction if configured
     if not mock_mode:
         try:
             result = _bedrock_extract(content, file.content_type)
             ai_engine = f"Amazon Bedrock – Nova Lite ({os.getenv('BEDROCK_MODEL_ID', 'amazon.nova-lite-v1:0')})"
             log.info("Successfully processed screenshot using Amazon Bedrock Nova Lite")
         except Exception as e:
-            log.warning("Amazon Bedrock invocation encountered: %s, falling back to parser", e)
+            log.warning("Amazon Bedrock invocation encountered: %s, falling back to local prototype parser", e)
 
     if not result:
         # Fallback to local optical character analysis if AWS credentials are not yet exported locally

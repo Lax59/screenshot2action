@@ -722,8 +722,12 @@ function App() {
   const [editData, setEditData]           = useState({})
   const [filter, setFilter]               = useState('All')
   const [sort, setSort]                   = useState('Soonest')
-  const [page, setPage]                   = useState('home')
-  const [aiMode, setAiMode]               = useState('')
+  const [page, setPage]                   = useState(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get('page')
+      return ['home', 'actions', 'opportunities', 'history'].includes(p) ? p : 'home'
+    } catch { return 'home' }
+  })
   const [storageInfo, setStorageInfo]     = useState('')
   const [theme, setTheme]                 = useState(() => localStorage.getItem('s2a_theme') || 'light')
   const [accent, setAccent]               = useState(() => localStorage.getItem('s2a_accent') || 'violet')
@@ -942,9 +946,8 @@ function App() {
             <span>{theme==='light' ? 'Night' : 'Day'}</span>
           </button>
           <NotificationBell actions={actions} />
-          <div className={`mode ${isBedrockLive ? 'aws-live' : 'aws-offline'}`}
-               title={`AI Engine | ${storageInfo || 'Amazon S3 + DynamoDB'}`}>
-            <i /> ⚡ {isBedrockLive ? 'AWS Bedrock' : 'AWS Cloud AI'}
+          <div className="mode aws-live" title="AI-Powered Intelligent Parser">
+            <i /> ⚡ AI-Powered
           </div>
         </div>
       </nav>
@@ -952,7 +955,7 @@ function App() {
       {/* ── HOME PAGE ── */}
       {page === 'home' && <>
         <section className="hero">
-          <div className="eyebrow"><b>✦</b> SERVERLESS AI INTELLIGENCE</div>
+          <div className="eyebrow"><b>✦</b> AI-POWERED SCREENSHOT INTELLIGENCE</div>
           <h1>Turn forgotten screenshots<br />into <em>actions.</em></h1>
           <p>Upload any screenshot — assignment circular, internship listing, hackathon poster, fee notice. AI extracts the key details and tracks everything for you.</p>
           <div className="hero-actions">
@@ -971,7 +974,6 @@ function App() {
           <div className="section-title">
             <span className="kicker">AWS ARCHITECTURE</span>
             <h2>How Screenshot2Action Works</h2>
-            <p>Amazon Bedrock (Nova Lite), Amazon S3, AWS Lambda, and Amazon DynamoDB working together.</p>
           </div>
 
           <div className="flow">
