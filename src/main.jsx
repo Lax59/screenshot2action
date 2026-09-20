@@ -165,9 +165,7 @@ function AwsTimeline({ timeline }) {
   if (!timeline) return null
   const steps = [
     { label: 'S3 Upload',    ms: timeline.s3_upload_ms,    icon: '☁' },
-    { label: 'OCR / Vision', ms: timeline.ocr_ms,          icon: '👁' },
-    { label: 'AI Analysis',  ms: timeline.ai_inference_ms, icon: '✦' },
-    { label: 'DynamoDB',     ms: timeline.dynamodb_ms,     icon: '⚡' },
+    { label: 'Bedrock AI',   ms: timeline.ai_inference_ms, icon: '✦' },
   ].filter(s => s.ms > 0)
 
   return (
@@ -905,28 +903,28 @@ function App() {
               <b>01</b>
               <span className="flow-icon">▧</span>
               <h3>Amazon S3</h3>
-              <p>Encrypted screenshot & raw archive storage (AES-256)</p>
+              <p>Screenshot storage with server-side AES-256 encryption</p>
             </div>
             <i>→</i>
             <div>
               <b>02</b>
               <span className="flow-icon sparkle">✦</span>
-              <h3>Amazon Bedrock</h3>
-              <p>Multi-modal Vision AI extracts dates, stipends, UPI & links</p>
+              <h3>Amazon Bedrock – Nova Lite</h3>
+              <p>Multi-modal foundation model extracts dates, deadlines & links</p>
             </div>
             <i>→</i>
             <div>
               <b>03</b>
               <span className="flow-icon check">⚡</span>
               <h3>AWS Lambda</h3>
-              <p>Serverless Python runtime with Mangum & sub-100ms response</p>
+              <p>Serverless event-driven execution with Mangum ASGI</p>
             </div>
             <i>→</i>
             <div>
               <b>04</b>
               <span className="flow-icon" style={{ background: '#fef3c7', color: '#b45309' }}>🗄️</span>
               <h3>Amazon DynamoDB</h3>
-              <p>Single-digit ms latency for real-time action CRUD</p>
+              <p>Managed NoSQL persistence for actions and application status</p>
             </div>
           </div>
 
@@ -934,22 +932,22 @@ function App() {
             <div className="arch-card">
               <span className="arch-tag s3">Storage Layer</span>
               <h4>Amazon Simple Storage Service (S3)</h4>
-              <p>Screenshots uploaded by students are stored securely in dedicated S3 buckets with strict bucket policies and lifecycle management.</p>
+              <p>Screenshots are stored in dedicated S3 buckets with strict bucket policies and automated 30-day lifecycle expiry.</p>
             </div>
             <div className="arch-card">
               <span className="arch-tag bedrock">Intelligence Layer</span>
-              <h4>Amazon Bedrock (Nova / Claude 3.5)</h4>
-              <p>High-accuracy vision inference parses messy circulars, college PDFs, internship flyers, and UPI QR codes into structured JSON schema.</p>
+              <h4>Amazon Bedrock – Nova Lite</h4>
+              <p>High-accuracy multimodal vision model (amazon.nova-lite-v1:0) parses notices, internship posters, and fee circulars directly into structured JSON.</p>
             </div>
             <div className="arch-card">
               <span className="arch-tag lambda">Compute Layer</span>
               <h4>AWS Lambda + API Gateway</h4>
-              <p>Zero-maintenance serverless microservices automatically scale with student traffic during admission and exam rush seasons.</p>
+              <p>Zero-maintenance serverless compute scales on-demand with student uploads with pay-per-use execution.</p>
             </div>
             <div className="arch-card">
               <span className="arch-tag dynamodb">Database Layer</span>
               <h4>Amazon DynamoDB</h4>
-              <p>High-throughput NoSQL database powers instant deadline alerts, application status pipeline, and calendar sync across all devices.</p>
+              <p>High-throughput NoSQL table powers deadline queries, application pipeline state transitions, and calendar exports.</p>
             </div>
           </div>
         </section>
